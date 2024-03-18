@@ -1,0 +1,3 @@
+C:/Users/g_sie/CLionProjects/NIDUC2-Projekt/cmake-build-debug/CMakeFiles/NIDUC2_Projekt.dir
+C:/Users/g_sie/CLionProjects/NIDUC2-Projekt/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/g_sie/CLionProjects/NIDUC2-Projekt/cmake-build-debug/CMakeFiles/rebuild_cache.dir
