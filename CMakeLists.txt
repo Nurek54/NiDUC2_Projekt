@@ -3,4 +3,6 @@ project(NIDUC2_Projekt)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(NIDUC2_Projekt main.cpp)
+add_executable(NIDUC2_Projekt main.cpp
+        Utils/DataGenerator.cpp
+        Utils/DataGenerator.h)
