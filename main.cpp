@@ -2,6 +2,8 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <fstream>
+#include "Utils/DataGenerator.h"
 
 using namespace std;
 
@@ -78,11 +80,58 @@ double firstOrderVoting(const vector<double>& glosy) {
     return glosy.front();
 }
 
+void generateCSV(const std::string& filename, const std::vector<std::vector<std::string>>& data) {
+    std::ofstream outputFile(filename);
+
+    if (!outputFile.is_open()) {
+        std::cerr << "Failed to open file: " << filename << std::endl;
+        return;
+    }
+
+    for (const auto& row : data) {
+        for (const auto& cell : row) {
+            outputFile << cell << ", ";
+        }
+        outputFile << "\n";
+    }
+
+    outputFile.close();
+}
+
 int main() {
     vector<double> glosy = {10.0, 20.0, 15.0, 15.5, 14.0};
+    double freq = 2, dur = 1, sr = 20, ror = 10;
+    vector<double> data1 = utils::DataGenerator::generateRandomSawtoothWave(freq, dur, sr, ror);
+    vector<double> data2 = utils::DataGenerator::generateRandomSawtoothWave(freq, dur, sr, ror);
+    vector<double> data3 = utils::DataGenerator::generateRandomSawtoothWave(freq, dur, sr, ror);
+    for (const auto& element : data1) {
+        std::cout << element << ' ';
+    }
+    cout << endl;
+    for (const auto& element : data2) {
+        std::cout << element << ' ';
+    }
+    cout << endl;
+    for (const auto& element : data3) {
+        std::cout << element << ' ';
+    }
+    cout << endl;
+
     double prog = 0.5;  // Próg dla głosowania z niedokładnymi danymi
 
-    cout << "Nieprecyzyjne glosowanie wiekszosciowe: " << votingAlgorithm(glosy, prog, true) << endl;
+    cout << "Nieprecyzyjne glosowanie wiekszosciowe: ";
+    std::vector<std::vector<std::string>> toWrite;
+    std::vector<std::string> col = {"lp","selected"};
+    toWrite.push_back(col);
+    for(int i = 0; i < data1.size(); i++){
+        vector<double> temp = {data1[i], data2[i], data3[i]};
+        double res = votingAlgorithm(temp, prog, true);
+        cout << res << " ";
+        std::vector<std::string> dat = {std::to_string(i),std::to_string(res)};
+        toWrite.push_back(dat);
+    }
+    generateCSV("wiekszosciowe.csv",toWrite);
+    cout << endl;
     cout << "Nieprecyzyjne glosowanie pluralistyczne: " << votingAlgorithm(glosy, prog, false) << endl;
 
     vector<double> wagi = {0.1, 0.5, 0.2, 0.1, 0.1};
