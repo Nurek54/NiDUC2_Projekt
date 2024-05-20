@@ -11,6 +11,7 @@ using namespace std;
 int znajdzLubUtworzGrupe(vector<vector<double>>& grupy, double glos, double prog) {
     for (size_t i = 0; i < grupy.size(); ++i) {
         if (!grupy[i].empty() && fabs(grupy[i][0] - glos) <= prog) {
+            grupy[i].push_back(glos);
             return i;
         }
     }
@@ -25,7 +26,7 @@ double votingAlgorithm(const vector<double>& glosy, double prog, bool czyWiekszo
     vector<vector<double>> grupy;
     for (double glos : glosy) {
         int indeksGrupy = znajdzLubUtworzGrupe(grupy, glos, prog);
-        grupy[indeksGrupy].push_back(glos);
+        //grupy[indeksGrupy].push_back(glos);
     }
 
     int indeksGrupyKandydata = -1;
@@ -38,7 +39,7 @@ double votingAlgorithm(const vector<double>& glosy, double prog, bool czyWiekszo
     }
 
     if (czyWiekszosc && maksRozmiarGrupy <= glosy.size() / 2) {
-        return -1; // Brak kandydata większościowego
+        return -99; // Brak kandydata większościowego
     }
     return grupy[indeksGrupyKandydata][0]; // Zwróć jednego kandydata losowo z największej grupy
 }
@@ -100,7 +101,7 @@ void generateCSV(const std::string& filename, const std::vector<std::vector<std:
 
 int main() {
     vector<double> glosy = {10.0, 20.0, 15.0, 15.5, 14.0};
-    double freq = 2, dur = 1, sr = 20, ror = 10;
+    double freq = 2, dur = 1, sr = 20, ror = 5;
     vector<double> data1 = utils::DataGenerator::generateRandomSawtoothWave(freq, dur, sr, ror);
     vector<double> data2 = utils::DataGenerator::generateRandomSawtoothWave(freq, dur, sr, ror);
     vector<double> data3 = utils::DataGenerator::generateRandomSawtoothWave(freq, dur, sr, ror);
@@ -116,10 +117,56 @@ int main() {
         std::cout << element << ' ';
     }
     cout << endl;
+    {
+        std::vector<std::vector<std::string>> toWrite;
+        std::vector<std::string> col = {"lp", "generated"};
+        toWrite.push_back(col);
+        for (int i = 0; i < data1.size(); i++) {
+            std::vector<std::string> dat = {std::to_string(i), std::to_string(data1[i])};
+            toWrite.push_back(dat);
+        }
+        generateCSV("data_1.csv", toWrite);
+    }
+    {
+        std::vector<std::vector<std::string>> toWrite;
+        std::vector<std::string> col = {"lp", "generated"};
+        toWrite.push_back(col);
+        for (int i = 0; i < data1.size(); i++) {
+            std::vector<std::string> dat = {std::to_string(i), std::to_string(data2[i])};
+            toWrite.push_back(dat);
+        }
+        generateCSV("data_2.csv", toWrite);
+    }
+    {
+        std::vector<std::vector<std::string>> toWrite;
+        std::vector<std::string> col = {"lp", "generated"};
+        toWrite.push_back(col);
+        for (int i = 0; i < data1.size(); i++) {
+            std::vector<std::string> dat = {std::to_string(i), std::to_string(data3[i])};
+            toWrite.push_back(dat);
+        }
+        generateCSV("data_3.csv", toWrite);
+    }
+    double prog = 1;  // Próg dla głosowania z niedokładnymi danymi
 
-    double prog = 0.5;  // Próg dla głosowania z niedokładnymi danymi
+    {
+        cout << "Nieprecyzyjne glosowanie wiekszosciowe: ";
+        std::vector<std::vector<std::string>> toWrite;
+        std::vector<std::string> col = {"lp", "selected"};
+        toWrite.push_back(col);
+        for (int i = 0; i < data1.size(); i++) {
+            vector<double> temp = {data1[i], data2[i], data3[i]};
+            double res = votingAlgorithm(temp, prog, true);
+            cout << res << " ";
+            std::vector<std::string> dat = {std::to_string(i), std::to_string(res)};
+            toWrite.push_back(dat);
+        }
+        generateCSV("wiekszosciowe.csv", toWrite);
+        cout << endl;
+    }
 
-    cout << "Nieprecyzyjne glosowanie wiekszosciowe: ";
+    {
+    cout << "Nieprecyzyjne glosowanie pluralistyczne: ";
     std::vector<std::vector<std::string>> toWrite;
     std::vector<std::string> col = {"lp","selected"};
     toWrite.push_back(col);
@@ -130,15 +177,74 @@ int main() {
         std::vector<std::string> dat = {std::to_string(i),std::to_string(res)};
         toWrite.push_back(dat);
     }
-    generateCSV("wiekszosciowe.csv",toWrite);
+    generateCSV("pluralistyczne.csv",toWrite);
     cout << endl;
-    cout << "Nieprecyzyjne glosowanie pluralistyczne: " << votingAlgorithm(glosy, prog, false) << endl;
+    }
 
-    vector<double> wagi = {0.1, 0.5, 0.2, 0.1, 0.1};
-    cout << "Weighted Average Voting: " << weightedAverageVoting(glosy, wagi) << endl;
-    cout << "Median Voting: " << medianVoting(glosy) << endl;
-    cout << "Linear Voting: " << linearVoting(glosy) << endl;
-    cout << "First-Order Voting: " << firstOrderVoting(glosy) << endl;
+    {
+        cout << "Weighted Average Voting: ";
+        vector<double> wagi = {0.3, 0.5, 0.2};
+        std::vector<std::vector<std::string>> toWrite;
+        std::vector<std::string> col = {"lp","selected"};
+        toWrite.push_back(col);
+        for(int i = 0; i < data1.size(); i++){
+            vector<double> temp = {data1[i], data2[i], data3[i]};
+            double res = weightedAverageVoting(temp, wagi);
+            cout << res << " ";
+            std::vector<std::string> dat = {std::to_string(i),std::to_string(res)};
+            toWrite.push_back(dat);
+        }
+        generateCSV("weighted.csv",toWrite);
+        cout << endl;
+    }
+
+    {
+        cout << "Median Voting: ";
+        std::vector<std::vector<std::string>> toWrite;
+        std::vector<std::string> col = {"lp","selected"};
+        toWrite.push_back(col);
+        for(int i = 0; i < data1.size(); i++){
+            vector<double> temp = {data1[i], data2[i], data3[i]};
+            double res = medianVoting(temp);
+            cout << res << " ";
+            std::vector<std::string> dat = {std::to_string(i),std::to_string(res)};
+            toWrite.push_back(dat);
+        }
+        generateCSV("median.csv",toWrite);
+        cout << endl;
+    }
+
+    {
+        cout << "Linear Voting: ";
+        std::vector<std::vector<std::string>> toWrite;
+        std::vector<std::string> col = {"lp","selected"};
+        toWrite.push_back(col);
+        for(int i = 0; i < data1.size(); i++){
+            vector<double> temp = {data1[i], data2[i], data3[i]};
+            double res = linearVoting(temp);
+            cout << res << " ";
+            std::vector<std::string> dat = {std::to_string(i),std::to_string(res)};
+            toWrite.push_back(dat);
+        }
+        generateCSV("linear.csv",toWrite);
+        cout << endl;
+    }
+
+    {
+        cout << "First-Order Voting: ";
+        std::vector<std::vector<std::string>> toWrite;
+        std::vector<std::string> col = {"lp","selected"};
+        toWrite.push_back(col);
+        for(int i = 0; i < data1.size(); i++){
+            vector<double> temp = {data1[i], data2[i], data3[i]};
+            double res = firstOrderVoting(temp);
+            cout << res << " ";
+            std::vector<std::string> dat = {std::to_string(i),std::to_string(res)};
+            toWrite.push_back(dat);
+        }
+        generateCSV("first_order.csv",toWrite);
+        cout << endl;
+    }
 
     return 0;
 }
